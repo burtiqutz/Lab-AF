@@ -5,14 +5,17 @@
  *pe care il insereaza la sfarsitul partii sortate.
  *Insertion sort imparte sirul in doua parti, una sortata si una nesortata, alegand primul element din partea nesortata
  *si inserandul in pozitia potrivita in partea sortata.
- *Bubble sort compara elementele adiacente si le interschimba.
- *Am observat ca in best case cel mai bun algoritm este
- *Iar in worst case este
- *In cazul mediu, cel mai bun este
+ *Bubble sort compara elementele adiacente si le interschimba, luand apoi de la capat parcurgerea.
+ *Am observat ca in best case cel mai bun algoritm este bubblesort, deoarece trece o singura data prin sir (liniar), iar
+ *selection cel mai prost(pentru ca mereu cauta minimul din partea nesortata).
+ *Iar in worst case este tot bubble sort cel mai prost, pentru ca trebuie sa parcurga incontinuu sirul de la inceput
+ *(cu tot cu optimizarea in care nu mergem pe elementele de la final), iar cel mai bun Selection.
+ *In cazul mediu, cel mai bun este egalitate intre selection si insertion, cu bubble fiind semnificativ mai rau dpdv sta
+ *tistic.
  */
 #include <iostream>
 #include "../profiler/Profiler.h"
-Profiler profiler;
+Profiler profiler("Average");
 
 #define MAX_SIZE 10000
 #define STEP_SIZE 100
@@ -133,6 +136,7 @@ void perf(int order)
     profiler.createGroup("Comp", "SelectionSortComp", "InsertionSortComp", "BubbleSortComp");
     profiler.createGroup("Comp BubbleSort (for best case)", "BubbleSortComp");
     profiler.createGroup("Overall", "SelectionSort", "InsertionSort", "BubbleSort");
+    profiler.createGroup("Overall but Bubble and Insertion", "BubbleSort", "InsertionSort");
 }
 
 void perf_all()
