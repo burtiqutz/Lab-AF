@@ -102,19 +102,20 @@ void perf(int order)
     int a[MAX_SIZE];
     int b[MAX_SIZE];
     int c[MAX_SIZE];
-    for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE)
+    for (int test = 0; test < TEST_SIZE; test++)
     {
-        FillRandomArray(a, n, -5000, 5000, false, order);
-        CopyArray(a, b, n);
-        CopyArray(a, c, n);
-
-        for (int test = 0; test < TEST_SIZE; test++)
+        for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE)
         {
+            FillRandomArray(a, n, -5000, 5000, false, order);
+            CopyArray(b, a, n);
+            CopyArray(c, a, n);
+
             selectionSort(a, n);
             insertionSort(b, n);
             bubbleSort(c, n);
         }
     }
+
     profiler.divideValues("SelectionSortComp", TEST_SIZE);
     profiler.divideValues("SelectionSortAsgn", TEST_SIZE);
     profiler.addSeries("SelectionSort", "SelectionSortAsgn", "SelectionSortComp");
