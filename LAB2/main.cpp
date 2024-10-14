@@ -129,7 +129,10 @@ void perf(int order)
     profiler.addSeries("BubbleSort", "BubbleSortAsgn", "BubbleSortComp");
 
     profiler.createGroup("Asgn", "SelectionSortAsgn", "InsertionSortAsgn", "BubbleSortAsgn");
+    profiler.createGroup("Asgn Selection Sort (for avg case)", "SelectionSortAsgn");
     profiler.createGroup("Comp", "SelectionSortComp", "InsertionSortComp", "BubbleSortComp");
+    profiler.createGroup("Comp BubbleSort (for best case)", "BubbleSortComp");
+    profiler.createGroup("Overall", "SelectionSort", "InsertionSort", "BubbleSort");
 }
 
 void perf_all()
