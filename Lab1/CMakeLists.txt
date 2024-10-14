@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.28)
+project(Lab1)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(Lab1 main.cpp
+        C:/Users/ddd/Documents/GitHub/utcn-fa-profiler/Profiler.h
+        C:/Users/ddd/Documents/GitHub/utcn-fa-profiler/Profiler.h)
