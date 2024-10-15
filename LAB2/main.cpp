@@ -30,6 +30,34 @@ void swap(int* a, int* b)
     *b = temp;
 }
 
+int binarySearch(int a[], int searched, int left, int right, Operation &opComp, Operation &opAsgn)
+{
+
+    while (left <= right)
+    {
+        opComp.count();
+        opAsgn.count();
+        int mid = (left + right) / 2;
+        opComp.count();
+        if(searched == a[mid])
+            return ++mid;
+        else
+        {
+            opComp.count();
+            if (searched > a[mid])
+            {
+                left = ++mid;
+            } else
+            {
+                right = --mid;
+            }
+            opAsgn.count();
+        }
+    }
+    return left;
+
+}
+
 void selectionSort(int* a, int n)
 {
     Operation opComp = profiler.createOperation("SelectionSortComp", n);
@@ -73,7 +101,29 @@ void insertionSort(int* a, int n)
         a[j + 1] = el;
     }
 }
+void binaryInsertionSort(int a[], int n)
+{
+    Operation opCompIS = profiler.createOperation("BinaryInsertionSortComp", n);
+    Operation opAsgn = profiler.createOperation("BinaryInsertionSortAsgn", n);
+    for (int i = 1; i < n; i++)
+    {
+        opAsgn.count();
+        int el = a[i];
+        int j = i - 1;
+        opAsgn.count();
+        int pos = binarySearch(a, el, 0, j, opCompIS, opAsgn);
 
+        while (pos <= j)
+        {
+            opCompIS.count();
+            opAsgn.count();
+            a[j + 1] = a[j];
+            j--;
+        }
+        opAsgn.count();
+        a[j + 1] = el;
+    }
+}
 void bubbleSort(int* a, int n)
 {
     Operation opComp = profiler.createOperation("BubbleSortComp", n);
@@ -105,6 +155,7 @@ void perf(int order)
     int a[MAX_SIZE];
     int b[MAX_SIZE];
     int c[MAX_SIZE];
+    int d[MAX_SIZE];
     for (int test = 0; test < TEST_SIZE; test++)
     {
         for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE)
@@ -112,10 +163,12 @@ void perf(int order)
             FillRandomArray(a, n, -5000, 5000, false, order);
             CopyArray(b, a, n);
             CopyArray(c, a, n);
+            CopyArray(d, a, n);
 
             selectionSort(a, n);
             insertionSort(b, n);
             bubbleSort(c, n);
+            binaryInsertionSort(d, n);
         }
     }
 
@@ -131,12 +184,16 @@ void perf(int order)
     profiler.divideValues("BubbleSortComp", TEST_SIZE);
     profiler.addSeries("BubbleSort", "BubbleSortAsgn", "BubbleSortComp");
 
-    profiler.createGroup("Asgn", "SelectionSortAsgn", "InsertionSortAsgn", "BubbleSortAsgn");
+    profiler.divideValues("BinaryInsertionSortAsgn", TEST_SIZE);
+    profiler.divideValues("BinaryInsertionSortComp", TEST_SIZE);
+    profiler.addSeries("BinaryInsertionSort", "BinaryInsertionSortAsgn", "BinaryInsertionSortComp");
+
+    profiler.createGroup("Asgn", "SelectionSortAsgn", "InsertionSortAsgn", "BubbleSortAsgn", "BinaryInsertionSortAsgn");
     profiler.createGroup("Asgn Selection Sort (for avg case)", "SelectionSortAsgn");
-    profiler.createGroup("Comp", "SelectionSortComp", "InsertionSortComp", "BubbleSortComp");
+    profiler.createGroup("Comp", "SelectionSortComp", "InsertionSortComp", "BubbleSortComp", "BinaryInsertionSortComp");
     profiler.createGroup("Comp BubbleSort (for best case)", "BubbleSortComp");
-    profiler.createGroup("Overall", "SelectionSort", "InsertionSort", "BubbleSort");
-    profiler.createGroup("Overall but Bubble and Insertion", "BubbleSort", "InsertionSort");
+    profiler.createGroup("Overall", "SelectionSort", "InsertionSort", "BubbleSort", "BinaryInsertionSort");
+    profiler.createGroup("OverallOnlyBubbleInsertionBinary", "BubbleSort", "InsertionSort", "BinaryInsertionSort");
 }
 
 void perf_all()
@@ -157,12 +214,15 @@ void demo()
     FillRandomArray(a, 20, -5000, 5000, false, UNSORTED);
     int b[20];
     int c[20];
+    int d[20];
     const int n = 20;
     CopyArray(b, a, n);
     CopyArray(c, a, n);
+    CopyArray(d, a, n);
     bubbleSort(a, n);
     insertionSort(b, n);
     selectionSort(c, n);
+    binaryInsertionSort(d, n);
     for (int i = 0; i < n; i++)
     {
         cout << a[i] << " ";
@@ -176,6 +236,11 @@ void demo()
     for (int i = 0; i < n; i++)
     {
         cout << c[i] << " ";
+    }
+    cout << '\n';
+    for (int i = 0; i < n; i++)
+    {
+        cout << d[i] << " ";
     }
 }
 
