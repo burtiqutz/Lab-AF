@@ -26,7 +26,7 @@ void swim(int a[], int n, int index)
 {
     while (index > 1 && a[index] < a[index / 2])
     {
-        profiler.countOperation("Swim", n, 5);//2 comparisions and a swap
+        profiler.countOperation("Swim", n, 5); //2 comparisions and a swap
         swap(a[index], a[index / 2]);
         index /= 2;
     }
@@ -34,7 +34,7 @@ void swim(int a[], int n, int index)
 
 void makeHeapSw(int a[], int n)
 {
-    Operation swimCount = profiler.createOperation("Swim", n);//i dont think this is needed
+    Operation swimCount = profiler.createOperation("Swim", n); //i dont think this is needed
     for (int i = 2; i <= n; ++i)
     {
         //swim(a, n, i, swimCount);
@@ -46,10 +46,10 @@ void sink(int a[], int n, int index)
 {
     while (2 * index <= n) //check only internal nodes
     {
-        profiler.countOperation("Sink", n, 1);//comaparision
+        profiler.countOperation("Sink", n, 1); //comaparision
         int indChild = 2 * index;
         //find smallest child
-        profiler.countOperation("Sink", n, 2);//if statement
+        profiler.countOperation("Sink", n, 2); //if statement
         if (indChild + 1 <= n && a[indChild + 1] < a[indChild])
         {
             indChild++;
@@ -58,7 +58,7 @@ void sink(int a[], int n, int index)
         profiler.countOperation("Sink", n, 1);
         if (a[indChild] < a[index])
         {
-            profiler.countOperation("Sink", n, 3);;//swap
+            profiler.countOperation("Sink", n, 3);; //swap
             swap(a[indChild], a[index]);
             index = indChild;
         }
@@ -88,7 +88,61 @@ void heapSort(int a[], int n)
         n--;
         sink(a, n, 1);
     }
-    cout <<" "<< a[1];
+    cout << " " << a[1];
+}
+
+void bubbleSort(int a[], int n)
+{
+    Operation op = profiler.createOperation("BubbleSort", n);
+    int sorted = 0;
+    int elCount = 1;
+    do
+    {
+        sorted = 1;
+        for (int i = 0; i < n - elCount; i++)
+        {
+            //profiler.countOperation("BubbleSort", n, 1);
+            op.count();
+            if (a[i] > a[i + 1])
+            {
+                //profiler.countOperation("BubbleSort", n, 3);
+                op.count(3);
+                swap(a[i], a[i + 1]);
+                sorted = 0;
+            }
+        }
+        elCount++;
+        //profiler.countOperation("BubbleSort", n, 1);//while check
+        op.count();
+    }
+    while (!sorted);
+}
+
+void recBubbleSort(int a[], int n)
+{
+    if (n == 1)
+    {
+        return;
+    }
+
+    int ok = 1;
+    profiler.countOperation("RecBubbleSort", n, 1);
+    for (int i = 0; i < n - 1; i++)
+    {
+        if (a[i] > a[i + 1])
+        {
+            profiler.countOperation("RecBubbleSort", n, 4);//1 comp 3 asgn
+            swap(a[i], a[i + 1]);
+            profiler.countOperation("RecBubbleSort", n, 1);//1 asign
+            ok = 0;
+        }
+    }
+    profiler.countOperation("RecBubbleSort", n, 1);
+    if (ok)
+    {
+        return; //daca nu am facut niciun swap am terminat
+    }
+    recBubbleSort(a, n - 1); //ultimul element este pe pozitia corecta
 }
 
 void demo()
@@ -107,21 +161,49 @@ void demo()
     cout << "\nAfter heapify\n";
     makeHeapSw(a, n);
     makeHeapSink(b, n);
-    cout<<"Swim method:";
+    cout << "Swim method:";
     for (int i = 1; i <= n; i++)
     {
         cout << " " << a[i];
     }
-    cout<<"\nSink method: ";
+    cout << "\nSink method: ";
     for (int i = 1; i <= n; i++)
     {
         cout << " " << b[i];
     }
     cout << "\nsorting: \n";
     heapSort(a, n);
+
+    int c[20];
+    int d[20];
+    FillRandomArray(c, 20, -500, 500, false, UNSORTED);
+    CopyArray(d, c, 20);
+    cout << "\nbefore bubble sort\n";
+    for (int i = 0; i < 20; i++)
+    {
+        cout << " " << c[i];
+    }
+    cout << '\n';
+    for (int i = 0; i < 20; i++)
+    {
+        cout << " " << d[i];
+    }
+    cout << '\n';
+    bubbleSort(c, 20);
+    recBubbleSort(d, 20);
+    cout << "after bubble sort\n";
+    for (int i = 0; i < 20; i++)
+    {
+        cout << " " << c[i];
+    }
+    cout << '\n';
+    for (int i = 0; i < 20; i++)
+    {
+        cout << " " << d[i];
+    }
 }
 
-void perf(int order)
+void perf_heap(int order)
 {
     int a[MAX_SIZE];
     int b[MAX_SIZE];
@@ -139,22 +221,44 @@ void perf(int order)
     profiler.divideValues("Sink", TEST_SIZE);
     profiler.divideValues("Swim", TEST_SIZE);
     profiler.createGroup("SinkVsSwim", "Sink", "Swim");
-
 }
 
-void perf_all()
+void perf_all_heap()
 {
-    perf(UNSORTED);
+    perf_heap(UNSORTED);
     //profiler.reset("Ascending");
     //perf(ASCENDING);
     profiler.reset("Descending-worst case");
-    perf(DESCENDING);
+    perf_heap(DESCENDING);
+    profiler.showReport();
+}
+
+void perf_sort()
+{
+    int a[MAX_SIZE];
+    int b[MAX_SIZE];
+
+    for (int i = 0; i < TEST_SIZE; i++)
+    {
+        for (int n = STEP_SIZE; n <= 3000; n += STEP_SIZE)
+        {
+            FillRandomArray(a, n, -5000, 5000, false, UNSORTED);
+            CopyArray(b, a, n);
+            bubbleSort(a, n);
+            recBubbleSort(b, n);
+        }
+    }
+    profiler.divideValues("BubbleSort", TEST_SIZE);
+    profiler.divideValues("RecBubbleSort", TEST_SIZE);
+    profiler.createGroup("IterativeVsRecursive", "BubbleSort", "RecBubbleSort");
+
     profiler.showReport();
 }
 
 int main()
 {
     //demo();
-    perf_all();
+    //perf_all_heap();
+    perf_sort();
     return 0;
 }
