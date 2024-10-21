@@ -7,6 +7,19 @@
 
 using namespace std;
 
+/*
+ *IORDACHE ALEXANDRU GRUPA 30228
+ *Am implementat cele 2 variante de a crea un heap (min heap in cazul meu).
+ *Prima varianta (swim, sau top down), incepe de la inceputul sirului in jos(top-down), si impinge elementele pe pozitia
+ *lor in sus.
+ *Cea de-a doua varianta (sink, bottom-up), incepe de la jumatatea sirului si merge in sus pe acesta, impingand elementele
+ *in jos in heap pe pozitia lor.
+ *Cum noi cream un minheap, worst case este atunci cand elementele sunt sortate descrescator, adica toate elementele nu
+ *respecta relatia de ordine.
+ *In average case, bottom up este putin mai eficient, la 10k elemente doar cateva mii de operatii diferenta, ambele sunt
+ *nlogn, insa la worst case este un ordin de magnitudine mai eficient (cam de 8 ori mai rapid), nlogn vs n.
+ */
+
 Profiler profiler("Average");
 
 void swim(int a[], int n, int index)
@@ -21,9 +34,10 @@ void swim(int a[], int n, int index)
 
 void makeHeapSw(int a[], int n)
 {
-    Operation swimCount = profiler.createOperation("Swim", n);
+    Operation swimCount = profiler.createOperation("Swim", n);//i dont think this is needed
     for (int i = 2; i <= n; ++i)
     {
+        //swim(a, n, i, swimCount);
         swim(a, n, i);
     }
 }
@@ -125,14 +139,17 @@ void perf(int order)
     profiler.divideValues("Sink", TEST_SIZE);
     profiler.divideValues("Swim", TEST_SIZE);
     profiler.createGroup("SinkVsSwim", "Sink", "Swim");
-    profiler.showReport();
+
 }
 
 void perf_all()
 {
     perf(UNSORTED);
-    profiler.reset("Worst case");
-    perf(ASCENDING);
+    //profiler.reset("Ascending");
+    //perf(ASCENDING);
+    profiler.reset("Descending-worst case");
+    perf(DESCENDING);
+    profiler.showReport();
 }
 
 int main()
