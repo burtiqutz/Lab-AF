@@ -18,6 +18,7 @@ using namespace std;
  *respecta relatia de ordine.
  *In average case, bottom up este putin mai eficient, la 10k elemente doar cateva mii de operatii diferenta, ambele sunt
  *nlogn, insa la worst case este un ordin de magnitudine mai eficient (cam de 8 ori mai rapid), nlogn vs n.
+ *Pentru sortari, am folosit bubble sort. Statistic, in average, cele doua sunt more or less identice.
  */
 
 Profiler profiler("Average");
@@ -93,7 +94,7 @@ void heapSort(int a[], int n)
 
 void bubbleSort(int a[], int n)
 {
-    Operation op = profiler.createOperation("BubbleSort", n);
+    //Operation op = profiler.createOperation("BubbleSort", n);
     int sorted = 0;
     int elCount = 1;
     do
@@ -101,24 +102,24 @@ void bubbleSort(int a[], int n)
         sorted = 1;
         for (int i = 0; i < n - elCount; i++)
         {
-            //profiler.countOperation("BubbleSort", n, 1);
-            op.count();
+            profiler.countOperation("BubbleSort", n, 1);
+            //op.count();
             if (a[i] > a[i + 1])
             {
-                //profiler.countOperation("BubbleSort", n, 3);
-                op.count(3);
+                profiler.countOperation("BubbleSort", n, 3);
+                //op.count(3);
                 swap(a[i], a[i + 1]);
                 sorted = 0;
             }
         }
         elCount++;
-        //profiler.countOperation("BubbleSort", n, 1);//while check
-        op.count();
+        profiler.countOperation("BubbleSort", n, 1);//while check
+        //op.count();
     }
     while (!sorted);
 }
 
-void recBubbleSort(int a[], int n)
+void recBubbleSort(int a[], int n, int size)
 {
     if (n == 1)
     {
@@ -126,23 +127,23 @@ void recBubbleSort(int a[], int n)
     }
 
     int ok = 1;
-    profiler.countOperation("RecBubbleSort", n, 1);
+    profiler.countOperation("RecBubbleSort", size, 1);
     for (int i = 0; i < n - 1; i++)
     {
         if (a[i] > a[i + 1])
         {
-            profiler.countOperation("RecBubbleSort", n, 4);//1 comp 3 asgn
+            profiler.countOperation("RecBubbleSort", size, 4);//1 comp 3 asgn
             swap(a[i], a[i + 1]);
-            profiler.countOperation("RecBubbleSort", n, 1);//1 asign
+            profiler.countOperation("RecBubbleSort", size, 1);//1 asign
             ok = 0;
         }
     }
-    profiler.countOperation("RecBubbleSort", n, 1);
+    profiler.countOperation("RecBubbleSort", size, 1);
     if (ok)
     {
         return; //daca nu am facut niciun swap am terminat
     }
-    recBubbleSort(a, n - 1); //ultimul element este pe pozitia corecta
+    recBubbleSort(a, n - 1, size); //ultimul element este pe pozitia corecta
 }
 
 void demo()
@@ -190,7 +191,7 @@ void demo()
     }
     cout << '\n';
     bubbleSort(c, 20);
-    recBubbleSort(d, 20);
+    recBubbleSort(d, 20, 20);
     cout << "after bubble sort\n";
     for (int i = 0; i < 20; i++)
     {
@@ -245,7 +246,7 @@ void perf_sort()
             FillRandomArray(a, n, -5000, 5000, false, UNSORTED);
             CopyArray(b, a, n);
             bubbleSort(a, n);
-            recBubbleSort(b, n);
+            recBubbleSort(b, n, n);
         }
     }
     profiler.divideValues("BubbleSort", TEST_SIZE);
@@ -255,10 +256,38 @@ void perf_sort()
     profiler.showReport();
 }
 
+void perf_sort_timer()
+{
+    int a[MAX_SIZE];
+    int b[MAX_SIZE];
+
+    for (int i = 0; i < TEST_SIZE; i++)
+    {
+        for (int n = STEP_SIZE; n <= 3000; n += STEP_SIZE)
+        {
+            FillRandomArray(a, n, -5000, 5000, false, UNSORTED);
+            CopyArray(b, a, n);
+            profiler.startTimer("BubbleSort", n);
+            for(int k = 0; k < 1000; k++)
+                bubbleSort(a, n);
+            profiler.stopTimer("BubbleSort", n);
+            profiler.startTimer("RecBubbleSort", n);
+            for(int k = 0; k < 1000; k++)
+                recBubbleSort(b, n, n);
+            profiler.stopTimer("RecBubbleSort", n);
+        }
+    }
+
+    profiler.createGroup("IterativeVsRecursiveTimer", "BubbleSort", "RecBubbleSort");
+
+    profiler.showReport();
+}
+
 int main()
 {
     //demo();
     //perf_all_heap();
-    perf_sort();
+    //perf_sort();
+    perf_sort_timer();
     return 0;
 }
