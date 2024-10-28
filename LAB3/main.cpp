@@ -285,9 +285,9 @@ void perf_sort_timer()
 
 int main()
 {
-    //demo();
+    demo();
     //perf_all_heap();
     //perf_sort();
-    perf_sort_timer();
+    //perf_sort_timer();
     return 0;
 }
