@@ -52,10 +52,9 @@ int partition(int a[], int left, int right, int pivot, int n)
 
 void quickSort(int a[], int n, int left, int right)
 {
-
     //de ce nu luam left == right?
     //pentru ca
-    if (right <= left)      //operatii pe indici, nu numaram
+    if (right <= left) //operatii pe indici, nu numaram
     {
         return;
     }
@@ -64,61 +63,51 @@ void quickSort(int a[], int n, int left, int right)
     quickSort(a, n, k + 1, right);
 }
 
-///copied from previous homework
-void sink(int a[], int n, int index, int sizeForChart) //heapify
+void minHeapify(int a[], int n, int i, int chartSize)
 {
-    while (2 * index <= n) //check only internal nodes
+    int l = 2 * i + 1;
+    int r = 2 * i + 2;
+    int largest;
+    profiler.countOperation("HeapSort", chartSize, 1);
+    if (l < n && a[l] > a[i])
     {
-        profiler.countOperation("HeapSort", sizeForChart, 1); //comaparision
-        int indChild = 2 * index;
-        //find smallest child
-        profiler.countOperation("HeapSort", sizeForChart, 2); //if statement
-        if (indChild + 1 < n && a[indChild + 1] < a[indChild])
-        {
-            indChild++;
-        }
-        //swap if there is a smaller one
-        profiler.countOperation("HeapSort", sizeForChart, 1);
-        if (a[indChild] < a[index])
-        {
-            profiler.countOperation("HeapSort", sizeForChart, 3);; //swap
-            swap(a[indChild], a[index]);
-            index = indChild;
-        }
-        else
-        {
-            break;
-        }
+        largest = l;
+    }
+    else
+    {
+        largest = i;
+    }
+    profiler.countOperation("HeapSort", chartSize, 1);
+    if (r < n && a[r] > a[largest])
+    {
+        largest = r;
+    }
+
+    if (largest != i)
+    {
+        profiler.countOperation("HeapSort", chartSize, 3);
+        swap(a[i], a[largest]);
+        minHeapify(a, n, largest, chartSize);
     }
 }
 
-void makeHeapSink(int a[], int n, int chartSize) //buildheap
+void buildHeap(int a[], int n, int chartSize)
 {
-    for (int i = n / 2; i > 0; --i)
+    for (int i = n / 2 - 1; i >= 0; --i)
     {
-        sink(a, n, i, chartSize);
+        minHeapify(a, n, i, chartSize);
     }
 }
 
-void heapSort(int a[], int n, int chartSize)
+void heapSort(int a[], int heapSize, int chartSize)
 {
-    makeHeapSink(a, n, chartSize);
-    while (n > 1)
+    buildHeap(a, heapSize, chartSize);
+    for (int i = heapSize - 1; i > 0; --i)
     {
-        profiler.countOperation("HeapSort", n, 4);
-       // cout << " " << a[1];
-        swap(a[1], a[n]);
-        n--;
-        sink(a, n, 1, chartSize);
-    }
-    //cout << " " << a[1];
-}
-
-void hybridQuickSort(int a[], int n, int left, int right)
-{
-    if (right - left <= n) //if el count < certain amount
-    {
-        insertionSort(a, left - right);
+        profiler.countOperation("HeapSort", chartSize, 3);
+        swap(a[0], a[i]);
+        heapSize--;
+        minHeapify(a, i, 0, chartSize);
     }
 }
 
@@ -135,7 +124,7 @@ void demo()
         cout << " " << a[i];
     }
 
-    quickSort(a, 15, 1, 14);
+    quickSort(a, 15, 0, 14);
     cout << "\nAfter quickSort:\n";
     for (int i = 1; i < 15; i++)
     {
@@ -143,8 +132,11 @@ void demo()
     }
 
     cout << "\nAfter heapSort:\n";
-    heapSort(b, 14, 14); //trebuie apelat cu n - 1 pt ca merge inclusiv si iau element out of bounds @sink
-
+    heapSort(b, 15, 15);
+    for (int i = 1; i < 15; i++)
+    {
+        cout << " " << b[i];
+    }
 }
 
 void perf(int sortingOrder)
@@ -152,13 +144,13 @@ void perf(int sortingOrder)
     int a[MAX_SIZE];
     int b[MAX_SIZE];
 
-    for(int test = 0; test < TEST_SIZE; ++test)
+    for (int test = 0; test < TEST_SIZE; ++test)
     {
-        for(int n = STEP_SIZE; n <= 10000; n += STEP_SIZE)
+        for (int n = STEP_SIZE; n <= 10000; n += STEP_SIZE)
         {
             FillRandomArray(a, n, -5000, 5000, false, sortingOrder);
             CopyArray(b, a, n);
-            quickSort(a, n, 1, n-1);
+            quickSort(a, n, 1, n - 1);
             heapSort(b, n - 1, n);
         }
     }
@@ -173,7 +165,7 @@ void perf_all()
     perf(UNSORTED);
     //profiler.reset("Best");
     //perf(ASCENDING);
-   // profiler.reset("Worst");
+    // profiler.reset("Worst");
     //perf(DESCENDING);
     profiler.showReport();
 }
