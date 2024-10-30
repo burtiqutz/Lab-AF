@@ -6,11 +6,16 @@
  * Quicksort functioneaza pe baza principiului de divide & conquer: se alege un pivot, trecandu-se toate elementele mai
  * mici decat acesta in stanga lui, cele mai mari in dreapta lui, iar apoi se apeleaza recursiv quicksort pe cele doua
  * partitii generate ale sirului.
+ * O mica nota: am refacut heapsort cu indexare de la 0 pentru ca imi era mai simplu de vazut greselile.
  * In cazul mediu statistic, quicksort este considerabil mai rapid decat heapsort, insa ambele urmeaza o curba de tipul
  * nlogn.
  *In best case complexitatea ramane nlogn, si ar fi in cazul cand pivotul se alege elementul median si sirul este sortat.
  *Worst case-ul pentru pivotul ales de noi la laborator (elementul cel mai din dreapta) este cand sirul este deja sortat
  *ceea ce duce la o complexitate de n^2.
+ *Am implementat si hibridizarea quicksortului prin folosirea insertion sort iterativ sub un anumit prag. Pragul difera
+ *in functie de task urile de fundal si un factor seemingly random, dar este in jur de 20-30 pentru testele facute.
+ *Hybrid quicksort ofera un improvement notabil atat in numar de operatii, cat si secunde.
+ *Pentru a vedea graficul ,trebuie decomentata functia din perf_all().
  */
 using namespace std;
 #define MAX_SIZE 10000
@@ -28,17 +33,21 @@ void print_array(int arr[], int size)
     cout << '\n';
 }
 
-void insertionSort(int* a, int low, int n)
+void insertionSort(int* a, int low, int n, Operation& op)
 {
     for (int i = low + 1; i < n; i++)
     {
+        op.count();
         int el = a[i];
         int j = i - 1;
+        op.count();
         while (low <= j && a[j] > el)
         {
+            op.count();
             a[j + 1] = a[j];
             j--;
         }
+        op.count();
         a[j + 1] = el;
     }
 }
@@ -64,58 +73,70 @@ int partition(int a[], int left, int right, int pivot, int n)
 
 void quickSort(int a[], int n, int left, int right, int posPivot)
 {
-    //de ce nu luam left == right?
-    //pentru ca
     if (right <= left) //operatii pe indici, nu numaram
     {
         return;
     }
     int k;
-    if(posPivot == 0)
+    if (posPivot == 0)
     {
+        //default
         k = partition(a, left, right, right, n);
-    } else
+    }
+    else if (posPivot == 1)
     {
-        k = partition(a, left, right, (left + right)/2, n);
+        k = partition(a, left, right, (left + right) / 2, n);
+    }
+    else
+    {
+        k = partition(a, left, right, left, n);
     }
 
     quickSort(a, n, left, k - 1, posPivot);
     quickSort(a, n, k + 1, right, posPivot);
 }
 
-//PURELY FOR COUNTING PURPOSES BECAUSE I DIDN'T WANT TO REWRITE THE CODE TO INCLUDE OPERATION REFFERENCE LOL
-int hybridPartition(int a[], int left, int right, int pivot, int n)
+int hybridPartition(int a[], int left, int right, int pivot, int n, Operation& op)
 {
-    profiler.countOperation("hybridQuickSort", n, 3);
+    //profiler.countOperation("hybridQuickSort", n, 3);
+    op.count(3);
     swap(a[right], a[pivot]);
     int j = left - 1;
     for (int i = left; i <= right; i++)
     {
-        profiler.countOperation("hybridQuickSort", n);
+        // profiler.countOperation("hybridQuickSort", n);
+        op.count();
         if (a[i] <= a[right])
         {
             ++j;
-            profiler.countOperation("hybridQuickSort", n, 3);
+            //profiler.countOperation("hybridQuickSort", n, 3);
+            op.count(3);
             swap(a[i], a[j]);
         }
     }
 
     return j;
 }
-void hybridQuickSort(int a[], int n, int left, int right, int prag)
+
+void hybridQuickSort(int a[], int n, int left, int right, int prag, Operation& op)
 {
-    profiler.countOperation("hybridQuickSort", n, 1);
-    if (left - right < prag)
+    //profiler.countOperation("hybridQuickSort", n, 1);
+    op.count();
+    if (right - left < prag)
     {
-        insertionSort(a, left, right);
+        insertionSort(a, left, right, op);
     }
     else
-    {   profiler.countOperation("hybridQuickSort", n, 1);
+    {
+        //profiler.countOperation("hybridQuickSort", n, 1);
+        op.count();
         if (left < right)
         {
-            int q = hybridPartition(a, left, right, right, n);
-            hybridQuickSort(a, n, left, q - 1, prag);
-            hybridQuickSort(a, n, q + 1, right, prag);
+            //int pivot = rand() % (right - left + 1) + left;
+            int pivot = right;
+            int q = hybridPartition(a, left, right, pivot , n, op);
+            hybridQuickSort(a, n, left, q - 1, prag, op);
+            hybridQuickSort(a, n, q + 1, right, prag, op);
         }
     }
 }
@@ -168,7 +189,7 @@ void heapSort(int a[], int heapSize, int chartSize)
         profiler.countOperation("HeapSort", chartSize, 1); //daca l am muta in alt array
     }
 }
-
+//nu numar nimic la quickselect asa ca am rescris functia fara count uri
 int hoarePartition(int a[], int left, int right)
 {
     int pivot = a[right];
@@ -181,8 +202,8 @@ int hoarePartition(int a[], int left, int right)
             swap(a[i], a[j]);
         }
     }
-
-    return j;
+    swap(a[j + 1], a[right]);
+    return j + 1;
 }
 
 int quickSelect(int a[], int p, int r, int i)
@@ -193,14 +214,16 @@ int quickSelect(int a[], int p, int r, int i)
     }
     int q = hoarePartition(a, p, r);
     int k = q - p + 1;
-    if (i <= k)
+    if (i == k)
     {
-        return quickSelect(a, p, q, i);
+        return a[q];
+    }
+    else if (i < q)
+    {
+        return quickSelect(a, p, q - 1, i);
     }
     else
-    {
         return quickSelect(a, q + 1, r, i - k);
-    }
 }
 
 void demo()
@@ -221,15 +244,25 @@ void demo()
     heapSort(b, 15, 15);
     print_array(a, 15);
 
-    //int c[10] = {1, 15, 0, -1, 16, -8, 5, 13, 9, 2};
-    // cout << "quickselect test: " << quickSelect(c, 0, 9, 2)<< '\n';
+    int c[10] = {1, 15, 0, -1, 16, -8, 5, 13, 9, 2};
+    cout << "quickselect test: " << quickSelect(c, 0, 9, 3) << '\n';
+    //i este indexat de la 1 la n, adica cel mai mic, al doilea c m mic etc
 
+    Operation dummy = profiler.createOperation("dummy", 20);
     int d[20];
-    FillRandomArray(d, 20, 0, 500, false, UNSORTED);
+    int e[20];
+    FillRandomArray(e, 20, 0, 500, false, UNSORTED);
+    cout << "Testing insertion sort. Before sorting:\n";
+    print_array(e, 20);
+    cout << "After sorting:\n";
+    insertionSort(e, 0, 20, dummy);
+    print_array(e, 20);
+
     cout << "Testing hybrid quicksort. Before sorting:\n";
+    FillRandomArray(d, 20, 0, 500, false, UNSORTED);
     print_array(d, 20);
-    cout<<"After sorting:\n";
-    hybridQuickSort(d, 100, 0, 20, 15);
+    cout << "After sorting:\n";
+    hybridQuickSort(d, 100, 0, 20, 15, dummy);
     print_array(d, 20);
 }
 
@@ -238,18 +271,21 @@ void findPrag()
     int arr[MAX_SIZE];
     int aux[MAX_SIZE];
     FillRandomArray(aux, MAX_SIZE, -5000, 5000, false, UNSORTED);
-    for(int prag = 5; prag <= 50; prag += 5)
+    for (int prag = 5; prag <= 50; prag += 5)
     {
+        Operation op = profiler.createOperation("prag", prag);
         CopyArray(arr, aux, MAX_SIZE);
-        hybridQuickSort(arr, MAX_SIZE, 0, MAX_SIZE, prag);
+        hybridQuickSort(arr, MAX_SIZE, 0, MAX_SIZE, prag, op);
     }
-    for(int prag = 5; prag <= 50; prag += 5)
+
+    for (int prag = 5; prag <= 50; prag += 5)
     {
         profiler.startTimer("timerHybrid", prag);
-        for(int i = 0; i < 100; ++i)
+        for (int i = 0; i < 100; ++i)
         {
+            Operation op = profiler.createOperation("dummy", prag); //numai pt a pasa ca parametru
             CopyArray(arr, aux, MAX_SIZE);
-            hybridQuickSort(arr, MAX_SIZE - 1, 0, MAX_SIZE, prag);
+            hybridQuickSort(arr, MAX_SIZE - 1, 0, MAX_SIZE, prag, op);
         }
         profiler.stopTimer("timerHybrid", prag);
     }
@@ -293,13 +329,55 @@ void perfQuickSortOnly(int sortingOrder, int posPivot)
     profiler.divideValues("QuickSort", TEST_SIZE);
 }
 
+void perfNormalVsHybrid(int sortingOrder)
+{
+    for (int n = STEP_SIZE; n <= 10000; n += STEP_SIZE)
+    {
+        int a[n];
+        int b[n];
+        for (int test = 0; test < TEST_SIZE; ++test)
+        {
+            Operation hybrid = profiler.createOperation("HybridQuickSort", n);
+            FillRandomArray(a, n, -5000, 5000, false, sortingOrder);
+            CopyArray(b, a, n);
+            quickSort(a, n, 1, n - 1, 0);
+            hybridQuickSort(b, n, 0, n, 31, hybrid);
+        }
+
+        int aux[n];
+        FillRandomArray(aux, n, -5000, 5000, false, sortingOrder);
+        profiler.startTimer("TimerNormal", n);
+        for (int j = 0; j < 100; ++j)
+        {
+            CopyArray(a, aux, n);
+            quickSort(a,n, 0, n - 1, 0);
+        }
+        profiler.stopTimer("TimerNormal", n);
+
+        profiler.startTimer("TimerHybrid", n);
+        Operation dummy = profiler.createOperation("dummy", 1);
+        for(int j = 0; j < 100; ++j)
+        {
+            CopyArray(b, aux, n);
+            hybridQuickSort(b, n, 0, n, 31, dummy);
+        }
+        profiler.stopTimer("TimerHybrid", n);
+    }
+
+    profiler.divideValues("QuickSort", TEST_SIZE);
+    profiler.divideValues("HybridQuickSort", TEST_SIZE);
+    profiler.createGroup("HybridVsNormal", "HybridQuickSort", "QuickSort");
+    profiler.createGroup("Timers", "TimerHybrid", "TimerNormal");
+}
+
 void perf_all()
 {
-    perf(UNSORTED);
-    profiler.reset("Worst"); ///ascending cu pivot pe dreapta duce la O(n^2)
-    perfQuickSortOnly(ASCENDING, 1);
-    profiler.reset("Best"); //pt best case, sirul este ascending cu pivot median
-    perfQuickSortOnly(ASCENDING, 1);
+    // perf(UNSORTED); //quick vs heap
+    // profiler.reset("Worst");
+    // perfQuickSortOnly(ASCENDING, 0); //ascending cu pivot pe dreapta duce la O(n^2)
+    // profiler.reset("Best");
+    // perfQuickSortOnly(ASCENDING, 1); //pt best case, sirul este ascending cu pivot median
+    perfNormalVsHybrid(UNSORTED);
 
     profiler.showReport();
 }
@@ -307,7 +385,7 @@ void perf_all()
 int main()
 {
     //demo();
-    //perf_all();
-    findPrag();
+    perf_all();
+    //findPrag();
     return 0;
 }
