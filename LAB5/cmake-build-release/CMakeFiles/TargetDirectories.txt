@@ -1,0 +1,3 @@
+D:/Lab AF/LAB5/cmake-build-release/CMakeFiles/LAB5.dir
+D:/Lab AF/LAB5/cmake-build-release/CMakeFiles/edit_cache.dir
+D:/Lab AF/LAB5/cmake-build-release/CMakeFiles/rebuild_cache.dir

@@ -372,12 +372,12 @@ void perfNormalVsHybrid(int sortingOrder)
 
 void perf_all()
 {
-    // perf(UNSORTED); //quick vs heap
-    // profiler.reset("Worst");
-    // perfQuickSortOnly(ASCENDING, 0); //ascending cu pivot pe dreapta duce la O(n^2)
-    // profiler.reset("Best");
-    // perfQuickSortOnly(ASCENDING, 1); //pt best case, sirul este ascending cu pivot median
-    perfNormalVsHybrid(UNSORTED);
+    perf(UNSORTED); //quick vs heap
+    profiler.reset("Worst");
+    perfQuickSortOnly(ASCENDING, 0); //ascending cu pivot pe dreapta duce la O(n^2)
+    profiler.reset("Best");
+    perfQuickSortOnly(ASCENDING, 1); //pt best case, sirul este ascending cu pivot median
+   // perfNormalVsHybrid(UNSORTED);
 
     profiler.showReport();
 }
@@ -385,7 +385,7 @@ void perf_all()
 int main()
 {
     //demo();
-    perf_all();
-    //findPrag();
+    //perf_all();
+    findPrag();
     return 0;
 }
