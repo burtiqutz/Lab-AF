@@ -8,7 +8,7 @@ using namespace std;
 /*
  *Iordache Alexandru grupa 30228
  *Am avut de implementat in acest laborator k-way merge.
- * Am folosit o lista de liste pentru a putea implementa un heap. Fiecare nod al heap ului reprezinta de fapt o lista
+ * Am folosit o lista(vector) de liste pentru a putea implementa un heap. Fiecare nod al heap ului reprezinta de fapt o lista
  * sortata crescator.
  * Algoritmul se foloseste de proprietatea structurii de heap pentru a putea gasi minimul dintre orice numar de liste.
  * Se extrage radacina heapului (primul element dintr-o lista) si se aplica heapify pentru a recrea heap ul. De fiecare
