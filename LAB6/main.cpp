@@ -12,8 +12,6 @@ using namespace std;
 #define TEST_SIZE 5
 #define SEARCH_COUNT 3000
 
-int aux[2 * HASH_TABLE_SIZE];   // global value so i can pick values from it later on
-
 enum
 {
     UNOCCUPIED,
@@ -111,10 +109,10 @@ void insertToAlpha(Entry* T, int tableSize, double alpha)
     // generating all elements up to tablesize
     // basically filling aux with elements from 0 to table size, in a random order
 
-    FillRandomArray(aux, tableSize, 0, tableSize, true, UNSORTED);
+
     for (int i = 0; i < noElements; i++)
     {
-        Entry toInsert = {aux[i], UNOCCUPIED};
+        Entry toInsert = {rand(), UNOCCUPIED};
         hashInsert(T, tableSize, toInsert);
     }
 }
@@ -128,14 +126,25 @@ void testSearch(Entry* T, int tableSize, int &maxAccessFound, int &maxAccessNotF
 
     maxAccessFound = -1;       // max accesses for found entries
     maxAccessNotFound = -1;    // max accesses for not-found entries
-    FillRandomArray(aux, tableSize, 0, 2 * tableSize, true, UNSORTED);
+
     for (int i = 0; i < SEARCH_COUNT; i++)
     {
-        int value = aux[i];
-        // if(i % 2)
-        // {
-        //     value = tableSize + rand() % tableSize;
-        // }
+        int value = -1 ;
+        if(i < SEARCH_COUNT / 2)
+        {
+            value = T[rand() % tableSize].id;   //  from table
+        } else
+        {
+            value = T[1].id;
+            Entry search = {value, UNOCCUPIED};
+            int test = 0;   //  not using this
+            while(hashSearch(T, tableSize, search, test) != -1)
+            {
+                //  generating an element until it is not part of the array
+                value = rand();
+                search.id = value;
+            }
+        }
         Entry dummy = {value, UNOCCUPIED};
 
         int accessCount = 0;
@@ -174,56 +183,51 @@ void perf()
     auto* T = (Entry*)calloc(HASH_TABLE_SIZE, sizeof(Entry));
     if (T == nullptr)
     {
-        perror("couldnt alloc T");
+        perror("couldn't allocate T");
         exit(-1);
     }
 
     double loadFactors[] = {0.80, 0.85, 0.90, 0.95, 0.99};
 
-    cout << "Factor de umplere" << " || " << "Elemente gasite " << " || " << "Elemente negasite" <<'\n'
-        <<  "                 " << " || " << "avg   || max    " << " || " << "avg    || max    " << '\n'
-        <<"------------------------------------------------------------------\n";
-
-    int avgMaxAccesFound[TEST_SIZE] = {0};
-    int avgMaxAccesNotFound[TEST_SIZE] = {0};
-    float avgNotFoundResults[TEST_SIZE] = {0.f};
-    float avgFoundResults[TEST_SIZE] = {0.f};
+    cout << "Factor de umplere" << " || " << "Elemente gasite " << " || " << "Elemente negasite" << '\n'
+         << "                 " << " || " << "avg   || max    " << " || " << "avg    || max    " << '\n'
+         << "------------------------------------------------------------------\n";
 
     for (auto alpha : loadFactors)
     {
+
+        int totalMaxAccessFound = 0;
+        int totalMaxAccessNotFound = 0;
+        float totalAvgFound = 0.f;
+        float totalAvgNotFound = 0.f;
+
         for (int i = 0; i < TEST_SIZE; i++)
         {
-            memset(T, 0, HASH_TABLE_SIZE * sizeof(Entry));  // reseting hash table
-            insertToAlpha(T, HASH_TABLE_SIZE, alpha);   //  fill up to alpha load factor
-            int maxAccess = 0;
-            int minAccess = 0;
-            float avg1 = 0.f;
-            float avg2 = 0.f;
-            testSearch(T, HASH_TABLE_SIZE, maxAccess, minAccess, avg1, avg2);
+            memset(T, 0, HASH_TABLE_SIZE * sizeof(Entry));  // Resetting hash table
+            insertToAlpha(T, HASH_TABLE_SIZE, alpha);       // Fill up to alpha load factor
 
-            avgMaxAccesFound[i] += maxAccess;    //  for load factor on pos i
-            avgMaxAccesNotFound[i] += minAccess;
-            avgNotFoundResults[i] += avg2;
-            avgFoundResults[i] += avg1;
+            int maxAccessFound = 0, maxAccessNotFound = 0;
+            float avgFound = 0.f, avgNotFound = 0.f;
 
+            testSearch(T, HASH_TABLE_SIZE, maxAccessFound, maxAccessNotFound, avgFound, avgNotFound);
+
+            totalMaxAccessFound += maxAccessFound;
+            totalMaxAccessNotFound += maxAccessNotFound;
+            totalAvgFound += avgFound;
+            totalAvgNotFound += avgNotFound;
         }
+
+        printf("%-18.2f || %-8.2f || %-8d || %-8.2f || %-8d\n",
+               alpha,
+               totalAvgFound / TEST_SIZE,
+               totalMaxAccessFound / TEST_SIZE,
+               totalAvgNotFound / TEST_SIZE,
+               totalMaxAccessNotFound / TEST_SIZE);
     }
 
-    for(int i = 0; i < TEST_SIZE; i++)
-    {
-        printf("%-18.2f", loadFactors[i]);
-        cout << "||";
-        printf("%-8.2f", avgFoundResults[i] / TEST_SIZE);
-        cout<< "||";
-        printf("%-8d", avgMaxAccesFound[i] / TEST_SIZE);
-        cout << "||";
-        printf("%-8.2f", avgNotFoundResults[i] / TEST_SIZE);
-        cout<< "||";
-        printf("%-8d", avgMaxAccesNotFound[i] / TEST_SIZE);
-        cout << '\n';
-    }
     free(T);
 }
+
 
 void demo()
 {
