@@ -6,6 +6,15 @@ using namespace std;
 /*Iordache Alexandru grupa 30228
  *Pentru acest laborator am avut de implementat un hash table cu open addressing si
  *quadratic probing.
+ *Fiecare element poate avea unul din trei statusuri, neocupat, ocupat, sters.
+ *Motivarea este pentru functia de search: cand stergi un element, daca a avut loc o coliziune pe acel element,
+ *mai pot fi elemente dupa acesta pe acelasi "i". Daca nu am avea status de deleted, ne am opri la acel element, desi
+ *elementul cautat ar putea fi dupa acesta, la un i urmator. Astfel, la cautare doar sarim peste elementele deleted.
+ *Am testat load factors de la 0.8 la 0.99 si se poate observa cum efortul creste semnificativ pentru un load factor
+ *mare, in special in cazurile de max accesari.
+ *In cazul in care stergem elemente, performanta tabelei de dispersie scade, intrucat fata de tabela echivalenta in
+ *care inseram aceleasi elemente din prima, unele elemente nu vor fi pe prima lor pozitie, ci la iteratii ulterioare
+ *de i pt search.
  */
 
 #define HASH_TABLE_SIZE 9973
@@ -178,6 +187,20 @@ void testSearch(Entry* T, int tableSize, int &maxAccessFound, int &maxAccessNotF
     avgNotFound = (notFoundCount > 0) ? static_cast<float>(sumNotFound) / notFoundCount : 0;
 }
 
+void lowerLoadFactor(Entry* T, int tableSize, double newLoadFactor, double oldLoadFactor) {
+    int newNoElem = static_cast<int>(newLoadFactor * tableSize);
+    int oldNoElem = static_cast<int>(oldLoadFactor * tableSize);
+
+    int countRemoved = 0;
+    for (int i = 0; i < tableSize && countRemoved < (oldNoElem - newNoElem); ++i) {
+        if (T[i].state == OCCUPIED) {   //  Can't remove deleted or occupied elements
+            T[i].state = UNOCCUPIED;
+            countRemoved++;
+        }
+    }
+}
+
+
 void perf()
 {
     auto* T = (Entry*)calloc(HASH_TABLE_SIZE, sizeof(Entry));
@@ -195,7 +218,6 @@ void perf()
 
     for (auto alpha : loadFactors)
     {
-
         int totalMaxAccessFound = 0;
         int totalMaxAccessNotFound = 0;
         float totalAvgFound = 0.f;
@@ -224,6 +246,37 @@ void perf()
                totalAvgNotFound / TEST_SIZE,
                totalMaxAccessNotFound / TEST_SIZE);
     }
+
+    //  Repeat steps for deletion
+    int totalMaxAccessFound = 0;
+    int totalMaxAccessNotFound = 0;
+    float totalAvgFound = 0.f;
+    float totalAvgNotFound = 0.f;
+    // Test lowering from 0.99 to 0.80
+    for (int i = 0; i < TEST_SIZE; i++)
+    {
+        memset(T, 0, HASH_TABLE_SIZE * sizeof(Entry));  // Resetting hash table
+
+        insertToAlpha(T, HASH_TABLE_SIZE, 0.99);
+
+        lowerLoadFactor(T, HASH_TABLE_SIZE, 0.80, 0.99);
+
+        int maxAccessFound = 0, maxAccessNotFound = 0;
+        float avgFound = 0.f, avgNotFound = 0.f;
+
+        testSearch(T, HASH_TABLE_SIZE, maxAccessFound, maxAccessNotFound, avgFound, avgNotFound);
+
+        totalMaxAccessFound += maxAccessFound;
+        totalMaxAccessNotFound += maxAccessNotFound;
+        totalAvgFound += avgFound;
+        totalAvgNotFound += avgNotFound;
+    }
+
+    printf("deleted            || %-8.2f || %-8d || %-8.2f || %-8d\n",
+           totalAvgFound / TEST_SIZE,
+           totalMaxAccessFound / TEST_SIZE,
+           totalAvgNotFound / TEST_SIZE,
+           totalMaxAccessNotFound / TEST_SIZE);
 
     free(T);
 }
