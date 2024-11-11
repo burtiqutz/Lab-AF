@@ -99,7 +99,7 @@ int hashSearch(Entry* T, int tableSize, Entry searched, int& foundAfter)
     return -1;
 }
 
-int hashDelete(Entry* T, int tableSize, Entry toDelete)
+void hashDelete(Entry* T, int tableSize, Entry toDelete)
 {
     int indexDeleted = -1;
     int dummy = 0;
@@ -107,9 +107,9 @@ int hashDelete(Entry* T, int tableSize, Entry toDelete)
     if(indexDeleted != -1)
     {
         T[indexDeleted].state = DELETED;
-        return 1;
+
     }
-    return 0;
+
 }
 
 void insertToAlpha(Entry* T, int tableSize, double alpha)
@@ -199,10 +199,8 @@ void lowerLoadFactor(Entry* T, int tableSize, double newLoadFactor, double oldLo
         Entry deleted = {T[index].id, UNOCCUPIED};
         if(T[index].state == OCCUPIED)
         {
-            if( hashDelete(T, tableSize, deleted))
-            {
-                countRemoved++;
-            }
+            hashDelete(T, tableSize, deleted);
+            countRemoved++;
         }
     }
 }
