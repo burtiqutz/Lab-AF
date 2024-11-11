@@ -12,12 +12,13 @@ using namespace std;
 #define TEST_SIZE 5
 #define SEARCH_COUNT 3000
 
-int aux[30000];   // global value so i can pick values from it later on
-int aux2[30000];
+int aux[2 * HASH_TABLE_SIZE];   // global value so i can pick values from it later on
+
 enum
 {
     UNOCCUPIED,
-    OCCUPIED
+    OCCUPIED,
+    DELETED
 };
 
 typedef struct
@@ -49,7 +50,7 @@ int hashInsert(Entry* T, int tableSize, Entry toInsert)
     while (i != tableSize)
     {
         int j = hashFunc(toInsert.id, i, tableSize);
-        if (T[j].state == UNOCCUPIED)
+        if (T[j].state == UNOCCUPIED || T[j].state == DELETED)
         {
             T[j].id = toInsert.id;
             T[j].state = OCCUPIED;
@@ -75,7 +76,7 @@ int hashSearch(Entry* T, int tableSize, Entry searched, int& foundAfter)
             foundAfter = i;
             return -1;
         }
-        else if (T[j].id == searched.id)
+        else if (T[j].id == searched.id && T[j].state != DELETED)
         {
             //occupied and corresponding id
             //found searched
@@ -98,7 +99,7 @@ void hashDelete(Entry* T, int tableSize, Entry toDelete)
     indexDeleted = hashSearch(T, tableSize, toDelete, dummy);
     if(indexDeleted != -1)
     {
-        T[indexDeleted].state = UNOCCUPIED;
+        T[indexDeleted].state = DELETED;
     }
 }
 
@@ -110,7 +111,7 @@ void insertToAlpha(Entry* T, int tableSize, double alpha)
     // generating all elements up to tablesize
     // basically filling aux with elements from 0 to table size, in a random order
 
-    FillRandomArray(aux, tableSize, 0, 2 * tableSize, true, UNSORTED);
+    FillRandomArray(aux, tableSize, 0, tableSize, true, UNSORTED);
     for (int i = 0; i < noElements; i++)
     {
         Entry toInsert = {aux[i], UNOCCUPIED};
@@ -125,13 +126,16 @@ void testSearch(Entry* T, int tableSize, int &maxAccessFound, int &maxAccessNotF
     int sumFound = 0;
     int sumNotFound = 0;
 
-    maxAccessFound = 0;       // max accesses for found entries
-    maxAccessNotFound = 0;    // max accesses for not-found entries
+    maxAccessFound = -1;       // max accesses for found entries
+    maxAccessNotFound = -1;    // max accesses for not-found entries
     FillRandomArray(aux, tableSize, 0, 2 * tableSize, true, UNSORTED);
     for (int i = 0; i < SEARCH_COUNT; i++)
     {
         int value = aux[i];
-
+        // if(i % 2)
+        // {
+        //     value = tableSize + rand() % tableSize;
+        // }
         Entry dummy = {value, UNOCCUPIED};
 
         int accessCount = 0;
@@ -185,9 +189,9 @@ void perf()
     float avgNotFoundResults[TEST_SIZE] = {0.f};
     float avgFoundResults[TEST_SIZE] = {0.f};
 
-    for (int i = 0; i < TEST_SIZE; i++)
+    for (auto alpha : loadFactors)
     {
-        for (auto alpha : loadFactors)
+        for (int i = 0; i < TEST_SIZE; i++)
         {
             memset(T, 0, HASH_TABLE_SIZE * sizeof(Entry));  // reseting hash table
             insertToAlpha(T, HASH_TABLE_SIZE, alpha);   //  fill up to alpha load factor
