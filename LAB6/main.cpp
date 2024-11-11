@@ -12,7 +12,7 @@ using namespace std;
 #define TEST_SIZE 5
 #define SEARCH_COUNT 3000
 
-int aux[HASH_TABLE_SIZE];   // global value so i can pick values from it later on
+int aux[30000];   // global value so i can pick values from it later on
 
 enum
 {
@@ -105,26 +105,32 @@ void hashDelete(Entry* T, int tableSize, Entry toDelete)
 void insertToAlpha(Entry* T, int tableSize, double alpha)
 {
     int noElements = static_cast<int>(alpha * tableSize); //no of elements to insert in the table to acheive ~alpha
-    int count = 0;
-    srand(time(nullptr));
+    srand(time(0));
 
     // generating all elements up to tablesize
     // basically filling aux with elements from 0 to table size, in a random order
 
-    FillRandomArray(aux, tableSize, 0, tableSize, true, UNSORTED);
-    int x = 0;
-    while (count < noElements)
+    FillRandomArray(aux, tableSize, 0, 15000, true, UNSORTED);
+    // int x = 0;
+    // int count = 0;
+    // while (count < noElements)
+    // {
+    //     do
+    //     {
+    //         //choose a random number until we find one that hasn't been inserted yet
+    //         Entry toInsert;
+    //         toInsert.id = aux[rand() % tableSize];
+    //         toInsert.state = UNOCCUPIED;
+    //         x = hashInsert(T, tableSize, toInsert);
+    //     }
+    //     while (x != -1);
+    //     count++;
+    // }
+    for (int i = 0; i < noElements; i++)
     {
-        do
-        {
-            //choose a random number until we find one that hasn't been inserted yet
-            Entry toInsert;
-            toInsert.id = aux[rand() % tableSize];
-            toInsert.state = UNOCCUPIED;
-            x = hashInsert(T, tableSize, toInsert);
-        }
-        while (x != -1);
-        count++;
+        //  choose a random number until we find one that hasn't been inserted yet
+        Entry toInsert = {aux[i], UNOCCUPIED};
+        hashInsert(T, tableSize, toInsert);
     }
 }
 
@@ -137,9 +143,10 @@ void testSearch(Entry* T, int tableSize, int &maxAccessFound, int &maxAccessNotF
 
     maxAccessFound = 0;       // max accesses for found entries
     maxAccessNotFound = 0;    // max accesses for not-found entries
-
+    FillRandomArray(aux, tableSize, 0, 30000, true, UNSORTED);
     for (int i = 0; i < SEARCH_COUNT; i++)
     {
+        int value = aux[i];
         //int value = rand() % (2 * tableSize); // doesn't work properly
         //int value = rand() % tableSize;     //  only finds items in array, not good
         // int value = 0;
@@ -150,18 +157,17 @@ void testSearch(Entry* T, int tableSize, int &maxAccessFound, int &maxAccessNotF
         // {
         //     value = aux[rand() % tableSize];
         // }
-        int value;
-        if (i < SEARCH_COUNT / 2) {
-            // Ensure we search for existing values
-            value = aux[rand() % tableSize];
-        } else {
-            // Ensure we search for non-existing values by using a larger range
-            value = tableSize + (rand() % tableSize);
-        }
 
-        Entry dummy;
-        dummy.id = value;
-        dummy.state = UNOCCUPIED;
+        // if (i < SEARCH_COUNT / 2) {
+        //     // we search for existing values
+        //     value = T[rand() % tableSize].id;
+        // } else {
+        //     // we search for non existing values
+        //     value = aux[rand() % tableSize] + tableSize;
+        // }
+
+        Entry dummy = {value, UNOCCUPIED};
+
         int accessCount = 0;
 
         //  hashSearch returns the index where it found the entry, -1 if it didn't find it
@@ -201,36 +207,51 @@ void perf()
         perror("couldnt alloc T");
         exit(-1);
     }
+
     double loadFactors[] = {0.80, 0.85, 0.90, 0.95, 0.99};
 
     cout << "Factor de umplere" << " || " << "Elemente gasite " << " || " << "Elemente negasite" <<'\n'
         <<  "                 " << " || " << "avg   || max    " << " || " << "avg    || max    " << '\n'
         <<"------------------------------------------------------------------\n";
 
-    //for (int i = 0; i < TEST_SIZE; i++)
-    //{
+    int avgMaxAccesFound[TEST_SIZE] = {0};
+    int avgMaxAccesNotFound[TEST_SIZE] = {0};
+    float avgNotFoundResults[TEST_SIZE] = {0.f};
+    float avgFoundResults[TEST_SIZE] = {0.f};
+
+    for (int i = 0; i < TEST_SIZE; i++)
+    {
         for (auto alpha : loadFactors)
         {
             memset(T, 0, HASH_TABLE_SIZE * sizeof(Entry));  // reseting hash table
-            insertToAlpha(T, HASH_TABLE_SIZE, alpha);
-            int maxAcces = 0;
-            int minAcces = 0;
+            insertToAlpha(T, HASH_TABLE_SIZE, alpha);   //  fill up to alpha load factor
+            int maxAccess = 0;
+            int minAccess = 0;
             float avg1 = 0.f;
             float avg2 = 0.f;
-            testSearch(T, HASH_TABLE_SIZE, maxAcces, minAcces, avg1, avg2);
-            printf("%-18.2f", alpha);
-            cout << "||";
-            printf("%-8.2f", avg1);
-            cout<< "||";
-            printf("%-8d",maxAcces);
-            cout << "||";
-            printf("%-8.2f", avg2);
-            cout<< "||";
-            printf("%-8d", minAcces);
-            cout << '\n';
-        }
-    //}
+            testSearch(T, HASH_TABLE_SIZE, maxAccess, minAccess, avg1, avg2);
 
+            avgMaxAccesFound[i] += maxAccess;    //  for load factor on pos i
+            avgMaxAccesNotFound[i] += minAccess;
+            avgNotFoundResults[i] += avg2;
+            avgFoundResults[i] += avg1;
+
+        }
+    }
+
+    for(int i = 0; i < TEST_SIZE; i++)
+    {
+        printf("%-18.2f", loadFactors[i]);
+        cout << "||";
+        printf("%-8.2f", avgFoundResults[i] / TEST_SIZE);
+        cout<< "||";
+        printf("%-8d", avgMaxAccesFound[i] / TEST_SIZE);
+        cout << "||";
+        printf("%-8.2f", avgNotFoundResults[i] / TEST_SIZE);
+        cout<< "||";
+        printf("%-8d", avgMaxAccesNotFound[i] / TEST_SIZE);
+        cout << '\n';
+    }
     free(T);
 }
 
