@@ -13,7 +13,7 @@ using namespace std;
 #define SEARCH_COUNT 3000
 
 int aux[30000];   // global value so i can pick values from it later on
-
+int aux2[30000];
 enum
 {
     UNOCCUPIED,
@@ -40,7 +40,7 @@ void printHashTable(Entry* T, int tableSize)
 
 int hashFunc(int key, int index, int tableSize)
 {
-    return (key % tableSize + 3 * index + 5 * index * index) % tableSize;
+    return (key % tableSize + 3 * index + 7 * index * index) % tableSize;
 }
 
 int hashInsert(Entry* T, int tableSize, Entry toInsert)
@@ -110,25 +110,9 @@ void insertToAlpha(Entry* T, int tableSize, double alpha)
     // generating all elements up to tablesize
     // basically filling aux with elements from 0 to table size, in a random order
 
-    FillRandomArray(aux, tableSize, 0, 15000, true, UNSORTED);
-    // int x = 0;
-    // int count = 0;
-    // while (count < noElements)
-    // {
-    //     do
-    //     {
-    //         //choose a random number until we find one that hasn't been inserted yet
-    //         Entry toInsert;
-    //         toInsert.id = aux[rand() % tableSize];
-    //         toInsert.state = UNOCCUPIED;
-    //         x = hashInsert(T, tableSize, toInsert);
-    //     }
-    //     while (x != -1);
-    //     count++;
-    // }
+    FillRandomArray(aux, tableSize, 0, 2 * tableSize, true, UNSORTED);
     for (int i = 0; i < noElements; i++)
     {
-        //  choose a random number until we find one that hasn't been inserted yet
         Entry toInsert = {aux[i], UNOCCUPIED};
         hashInsert(T, tableSize, toInsert);
     }
@@ -143,28 +127,10 @@ void testSearch(Entry* T, int tableSize, int &maxAccessFound, int &maxAccessNotF
 
     maxAccessFound = 0;       // max accesses for found entries
     maxAccessNotFound = 0;    // max accesses for not-found entries
-    FillRandomArray(aux, tableSize, 0, 30000, true, UNSORTED);
+    FillRandomArray(aux, tableSize, 0, 2 * tableSize, true, UNSORTED);
     for (int i = 0; i < SEARCH_COUNT; i++)
     {
         int value = aux[i];
-        //int value = rand() % (2 * tableSize); // doesn't work properly
-        //int value = rand() % tableSize;     //  only finds items in array, not good
-        // int value = 0;
-        // if(i % 2)
-        // {
-        //     value = rand() % tableSize;
-        // } else
-        // {
-        //     value = aux[rand() % tableSize];
-        // }
-
-        // if (i < SEARCH_COUNT / 2) {
-        //     // we search for existing values
-        //     value = T[rand() % tableSize].id;
-        // } else {
-        //     // we search for non existing values
-        //     value = aux[rand() % tableSize] + tableSize;
-        // }
 
         Entry dummy = {value, UNOCCUPIED};
 
