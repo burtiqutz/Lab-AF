@@ -2,7 +2,6 @@
 #include <iostream>
 #include "../profiler/Profiler.h"
 using namespace std;
-Profiler profiler;
 
 /*Iordache Alexandru grupa 30228
  *Pentru acest laborator am avut de implementat un hash table cu open addressing si
@@ -12,6 +11,8 @@ Profiler profiler;
 #define HASH_TABLE_SIZE 9973
 #define TEST_SIZE 5
 #define SEARCH_COUNT 3000
+
+int aux[HASH_TABLE_SIZE];   // global value so i can pick values from it later on
 
 enum
 {
@@ -39,7 +40,7 @@ void printHashTable(Entry* T, int tableSize)
 
 int hashFunc(int key, int index, int tableSize)
 {
-    return (key % tableSize + 3 * index + 7 * index * index) % tableSize;
+    return (key % tableSize + 3 * index + 5 * index * index) % tableSize;
 }
 
 int hashInsert(Entry* T, int tableSize, Entry toInsert)
@@ -76,6 +77,7 @@ int hashSearch(Entry* T, int tableSize, Entry searched, int& foundAfter)
         }
         else if (T[j].id == searched.id)
         {
+            //occupied and corresponding id
             //found searched
             //remember how many acceses we needed
             foundAfter = i;
@@ -102,13 +104,14 @@ void hashDelete(Entry* T, int tableSize, Entry toDelete)
 
 void insertToAlpha(Entry* T, int tableSize, double alpha)
 {
-    int noElements = (int)(alpha * tableSize); //no of elements to insert in the table to acheive ~alpha
+    int noElements = static_cast<int>(alpha * tableSize); //no of elements to insert in the table to acheive ~alpha
     int count = 0;
     srand(time(nullptr));
 
-    //generating all elements up to 2 * tablesize
-    int aux[2 * tableSize] = {0};
-    FillRandomArray(aux, 2 * tableSize, 0, 2 * tableSize, true, UNSORTED);
+    // generating all elements up to tablesize
+    // basically filling aux with elements from 0 to table size, in a random order
+
+    FillRandomArray(aux, tableSize, 0, tableSize, true, UNSORTED);
     int x = 0;
     while (count < noElements)
     {
@@ -116,7 +119,7 @@ void insertToAlpha(Entry* T, int tableSize, double alpha)
         {
             //choose a random number until we find one that hasn't been inserted yet
             Entry toInsert;
-            toInsert.id = aux[rand() % (2 * tableSize)];
+            toInsert.id = aux[rand() % tableSize];
             toInsert.state = UNOCCUPIED;
             x = hashInsert(T, tableSize, toInsert);
         }
@@ -125,48 +128,69 @@ void insertToAlpha(Entry* T, int tableSize, double alpha)
     }
 }
 
-void testSearch(Entry* T, int tableSize, int &maxAcces, int &minAcces, float &avgFound, float &avgNotFound)
+void testSearch(Entry* T, int tableSize, int &maxAccessFound, int &maxAccessNotFound, float &avgFound, float &avgNotFound)
 {
     int foundCount = 0;
     int notFoundCount = 0;
-    int sumNotFound = 0;
     int sumFound = 0;
+    int sumNotFound = 0;
+
+    maxAccessFound = 0;       // max accesses for found entries
+    maxAccessNotFound = 0;    // max accesses for not-found entries
 
     for (int i = 0; i < SEARCH_COUNT; i++)
     {
-        int value = rand() % (2 * tableSize);
+        //int value = rand() % (2 * tableSize); // doesn't work properly
+        //int value = rand() % tableSize;     //  only finds items in array, not good
+        // int value = 0;
+        // if(i % 2)
+        // {
+        //     value = rand() % tableSize;
+        // } else
+        // {
+        //     value = aux[rand() % tableSize];
+        // }
+        int value;
+        if (i < SEARCH_COUNT / 2) {
+            // Ensure we search for existing values
+            value = aux[rand() % tableSize];
+        } else {
+            // Ensure we search for non-existing values by using a larger range
+            value = tableSize + (rand() % tableSize);
+        }
+
         Entry dummy;
         dummy.id = value;
         dummy.state = UNOCCUPIED;
-        int index = -1;
+        int accessCount = 0;
 
-        int found = hashSearch(T, tableSize, dummy, index);
-        if(found == -1)
+        //  hashSearch returns the index where it found the entry, -1 if it didn't find it
+        int found = hashSearch(T, tableSize, dummy, accessCount);
+        if (found == -1)
         {
+            // Not found case
             notFoundCount++;
-        } else
-        {
-            foundCount++;
+            sumNotFound += accessCount; //  for calculating average accesses
+            if (accessCount > maxAccessNotFound)
+            {
+                maxAccessNotFound = accessCount;    //  computing max access
+            }
         }
-
-        if (index != -1)
+        else
         {
-            if (index > maxAcces)
+            // Found case
+            foundCount++;
+            sumFound += accessCount;
+            if (accessCount > maxAccessFound)
             {
-                maxAcces = index;
+                maxAccessFound = accessCount;
             }
-            sumFound += index;
-        } else
-        {
-            if (index > minAcces)
-            {
-                minAcces = index;
-            }
-            sumNotFound += index;
         }
     }
-    avgFound = (float)( sumFound /  foundCount);
-    avgNotFound = (float) (sumNotFound / notFoundCount);
+
+    // avoid division by zero because cLion is crying
+    avgFound = (foundCount > 0) ? static_cast<float>(sumFound) / foundCount : 0;
+    avgNotFound = (notFoundCount > 0) ? static_cast<float>(sumNotFound) / notFoundCount : 0;
 }
 
 void perf()
@@ -181,20 +205,29 @@ void perf()
 
     cout << "Factor de umplere" << " || " << "Elemente gasite " << " || " << "Elemente negasite" <<'\n'
         <<  "                 " << " || " << "avg   || max    " << " || " << "avg    || max    " << '\n'
-        <<"-------------------------------------------------------------------------------------------\n";
+        <<"------------------------------------------------------------------\n";
 
     //for (int i = 0; i < TEST_SIZE; i++)
     //{
         for (auto alpha : loadFactors)
         {
+            memset(T, 0, HASH_TABLE_SIZE * sizeof(Entry));  // reseting hash table
             insertToAlpha(T, HASH_TABLE_SIZE, alpha);
             int maxAcces = 0;
             int minAcces = 0;
             float avg1 = 0.f;
             float avg2 = 0.f;
-
             testSearch(T, HASH_TABLE_SIZE, maxAcces, minAcces, avg1, avg2);
-            cout << alpha << "             " << " || " << avg1 << "      " << maxAcces << "   " << avg2 << "      " << minAcces << "   " << '\n';
+            printf("%-18.2f", alpha);
+            cout << "||";
+            printf("%-8.2f", avg1);
+            cout<< "||";
+            printf("%-8d",maxAcces);
+            cout << "||";
+            printf("%-8.2f", avg2);
+            cout<< "||";
+            printf("%-8d", minAcces);
+            cout << '\n';
         }
     //}
 
@@ -256,7 +289,6 @@ void demo()
     toDelete.id = 112;
     hashDelete(T, 11, toDelete);
     printHashTable(T, 11);
-
 
     free(T);
 }
