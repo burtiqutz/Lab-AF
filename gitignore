@@ -1,5 +1,11 @@
+# Ignore all .zip files
+*.zip
 
+# Ignore all .obj files
+*.obj
 
+# Ignore all .exe files
+*.exe
 
-
-# End of https://mrkandreev.name/snippets/gitignore-generator/#zip,exe,obj,html
+# Ignore all .html files
+*.html
