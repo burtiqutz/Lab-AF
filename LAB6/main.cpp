@@ -79,22 +79,22 @@ int hashSearch(Entry* T, int tableSize, Entry searched, int& foundAfter)
         int j = hashFunc(searched.id, i, tableSize);
         if (T[j].state == UNOCCUPIED)
         {
-            //reached a spot where searched should be
+            //  reached a spot where searched should be
             foundAfter = i;
             return -1;
         }
         else if (T[j].id == searched.id && T[j].state != DELETED)
         {
-            //occupied and corresponding id
-            //found searched
-            //remember how many acceses we needed
+            //  occupied and corresponding id
+            //  found searched
+            //  remember how many acceses we needed
             foundAfter = i;
             return j;
         }
         i++;
     }
 
-    //got to end of table and didn't find it
+    //  got to end of table and didn't find it
     foundAfter = i;
     return -1;
 }
