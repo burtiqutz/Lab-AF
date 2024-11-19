@@ -10,10 +10,11 @@ int parent[] = {-100, 2, 7, 5, 2, 7, 7, -1, 5, 2};
 struct node2
 {
     int key;
-    list<node2*> sons;
+    //list<node2*> sons;
+    node2 *sons[50];    //  max 50 fii
 };
 
-node2 *r2, *r2Const[500]; //  Pentru transformarea 1
+node2 *r2Const[500]; //  Pentru transformarea 1
 
 struct node3
 {
@@ -63,7 +64,8 @@ void prettyPrintR2(node2* r2, int tabs)
 
     for (auto it : r2->sons)
     {
-        prettyPrintR2(it, tabs + 1);
+        if(it != nullptr)
+            prettyPrintR2(it, tabs + 1);
     }
 }
 
@@ -94,7 +96,7 @@ node2* transformToMultiway(int parent[], int n)
         // Create the node for the current index if it doesn't exist
         if (r2Const[i] == nullptr)
         {
-            r2Const[i] = (node2*)calloc(1, sizeof(node2));
+            r2Const[i] = static_cast<node2*>(calloc(1, sizeof(node2)));
             r2Const[i]->key = i;
         }
 
@@ -104,14 +106,18 @@ node2* transformToMultiway(int parent[], int n)
             // Create the parent node if it doesn't exist
             if (r2Const[parent[i]] == nullptr)
             {
-                r2Const[parent[i]] = (node2*)calloc(1, sizeof(node2));
+                r2Const[parent[i]] = static_cast<node2*>(calloc(1, sizeof(node2)));
                 r2Const[parent[i]]->key = parent[i];
             }
 
             // Add current node as a son of its parent
-
-            r2Const[parent[i]]->
-            sons.push_back(r2Const[i]);
+            int k = 0;
+            while(r2Const[parent[i]]->sons[k] != nullptr)
+            {
+                k++;
+            }
+            r2Const[parent[i]]->sons[k] = r2Const[i];
+            //sons.push_back(r2Const[i]);
         }
         else
         {
@@ -131,7 +137,7 @@ node3* transformToBinaryTree(node2* root, Operation& op)
 
     node3* newNode = (node3*)malloc(sizeof(node3));
 
-    newNode->left = createNode3(root->sons.front()->key);
+    //newNode->left = createNode3(root->sons.front()->key);
 }
 
 void recursivePostOrder(node3* root, Operation& op, bool print)
