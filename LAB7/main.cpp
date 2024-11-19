@@ -129,15 +129,26 @@ node2* transformToMultiway(int parent[], int n)
 }
 
 
-node3* transformToBinaryTree(node2* root, Operation& op)
+node3* transformToBinaryTree(node2* root2, node3* leftBrother)
 {
-    //  Preorder multiway tree, create new nodes, first node i insert to the left, rest to the right
-    if (root == nullptr)
-        return nullptr;
+    node3* root3 = static_cast<node3*> (calloc(1, sizeof(node3)));
+    root3->key = root2->key;
+    if(leftBrother != nullptr)
+    {
+        leftBrother->right = root3;
+    }
+    node3* lastChild = nullptr;
 
-    node3* newNode = (node3*)malloc(sizeof(node3));
+    for(int i = 0; i < 50 && root2->sons[i] != nullptr; i++)
+    {
 
-    //newNode->left = createNode3(root->sons.front()->key);
+        lastChild = transformToBinaryTree(root2->sons[i], lastChild);
+        if(i == 0) //  If first child
+        {
+            root3->left = lastChild;
+        }
+    }
+    return root3;
 }
 
 void recursivePostOrder(node3* root, Operation& op, bool print)
@@ -337,9 +348,14 @@ void perf()
 
 void transforms()
 {
+    cout << "Reprezentare1:\n";
     prettyPrintR1(parent, 10, 0, 7);
     node2* tree2 = transformToMultiway(parent, sizeof(parent) / sizeof(int));
+    cout << "Reprezentare2:\n";
     prettyPrintR2(tree2, 0);
+    node3* tree3 = transformToBinaryTree(tree2, nullptr);
+    cout << "Reprezentare3:\n";
+    prettyPrintR3(tree3, 0);
 }
 
 int main()
