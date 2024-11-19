@@ -3,6 +3,24 @@
 #include "../profiler/Profiler.h"
 Profiler p;
 
+/*
+ *IORDACHE ALEXANDRU GRUPA 30228
+ *Pentru aceasta tema am avut de implementat tree walk in mod recursiv si iterativ, si transformarile de la
+ *arbore multicai cu vector de parinti la arbore multicai cu noduri si apoi la arbore binar.
+ *Pentru tree walk recursiv am folosit implementarile standard de la cursul de SDA, iar pentru varianta iterativa am
+ *folosit implementarea din curs. Toate variantele au exact aceeasi complexitate, O(n), cum se vede pe grafic.
+ *Pentru a face prima transformare in O(n) am parcurs vectorul de parinti o singura data. Pe masura ce inaintam in
+ *vector, daca nodul la care eram nu exista, il cream in memorie si, de asemenea, daca parintele acestuia nu exista,
+ *il cream si pe el, apoi faceam legatura intre parinte si copil la pozitia corecta. In structura de node2 avem un array
+ *de fii, in mod obisnuit as fi folosit o lista din c++ dar aveam probleme de implementare. As putea adauga un index in
+ *plus in structura pentru pozitia ultimului fiu inserat, ceea ce ar face link ul dintre parinte si copil in o(1), dar
+ *implementarea actuala este liniara (parcurge liniar vectorul de fii) si duce tot la implementare liniara in final.
+ *Pentru cea de-a doua transformare, cream noul tip de nod adaptat pentru arborele binar. Daca ultimul frate exista, il
+ *legam pe acesta la nodul curent. Apoi parcurgem liniar lista de fii ai nodului curent, pe primul fiu legandu-l la
+ *stanga nodului curent.
+ **/
+
+
 using namespace std;
 
 int parent[] = {-100, 2, 7, 5, 2, 7, 7, -1, 5, 2};
