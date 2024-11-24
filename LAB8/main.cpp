@@ -6,6 +6,22 @@ using std::cout, std::cin;
 #define TEST_SIZE 5
 #define MAX_SIZE 10000
 
+/*
+ *  IORDACHE ALEXANDRU, GRUPA 30228
+ *  Pentru aceasta tema am avut de implementat Order-Statistic tree pe un PBT, cu functiile de
+ *  build, select si delete.
+ *  Pentru build, luam dintr un sir sortat elementul median (care va fi la mijloc) pe care il transformam
+ *  in nod, apoi rezolvam recursiv problema pe cele doua subsiruri la stanga si dreapta elementului luat.
+ *  Pentru select, calculam rangul elementului curent, pe baza caruia cautam in subarborele stang sau in cel
+ *  drept daca rangul curent nu este egal cu cel cautat.
+ *  Pentru delete am cautat elemetnul de sters si parintele acestuia, iar, in functie de numarul de copii
+ *  al elementului sters, doar il stergem, il inlocuim cu copilul, sau il inlocuim cu succesorul. De asemenea,
+ *  refacem liniar proprietatea de size (prin parcurgere liniara a path ului de cautare initial).
+ */
+
+
+
+
 // la build aleg mediana mereu (mijocul) si apelez recursiv pe stanga si dreapta
 // la select rank = size.left + 1, si cautam apoi pe stanga sau pe dreapta cu size schimbat
 // la delete apelez select, dar am nevoie si de parintele celui selectat pt a repara nodul;
